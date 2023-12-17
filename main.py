@@ -1,4 +1,5 @@
 from test_data import *
+from utils import is_valid_product_id
 
 from schemas import *
 from fastapi import FastAPI, Request
@@ -99,6 +100,96 @@ def product_put(product_id: int, new_product: Product):
         setattr(product, field, value)
     product.id = product_id
     return product
+
+# -------------------- Stores -------------------------
+
+@app.get('/stores')
+def stores():
+    return stores_data
+
+@app.post('/stores')
+def create_store(new_store: Store):
+    
+    products = new_store.products
+    if products:
+        total_count = 0
+        for product_id, count in products.items():
+            if not is_valid_product_id(product_id):
+                return JSONResponse(
+                    {"msg": f"Product with id {product_id} was not found"},
+                    status_code=401
+                )
+            product = get_product(product_id)
+            total_count += product.size * count
+            if total_count > new_store.capacity:
+                return JSONResponse(
+                    {"msg": "Store capacity is not enough"}
+                )
+    
+    if stores_data:
+        new_store.id = stores_data[-1].id + 1
+    else:
+        new_store.id = 1
+    stores_data.append(new_store)
+    return new_store
+
+@app.get('/stores/{store_id}')
+def get_store(store_id: int):
+    for store in stores_data:
+        if store.id == store_id:
+            return store
+    return JSONResponse({'msg': 'Store not found'}, status_code=404)
+
+@app.put('/stores/{store_id}')
+def store_put(store_id: int, new_store: Store):
+    
+    products = new_store.products
+    if products:
+        total_count = 0
+        for product_id, count in products.items():
+            if not is_valid_product_id(product_id):
+                return JSONResponse(
+                    {"msg": f"Product with id {product_id} was not found"},
+                    status_code=401
+                )
+            product = get_product(product_id)
+            total_count += product.size * count
+            if total_count > new_store.capacity:
+                return JSONResponse(
+                    {"msg": "Store capacity is not enough"}
+                )
+                
+    for store in stores_data:
+        if store.id == store_id:
+            break
+    else:
+        return JSONResponse({'msg': 'Store not found'}, status_code=404)
+
+    for field, value in new_store:
+        setattr(store, field, value)
+    store.id = store_id
+    return store
+
+@app.get('/stores/{store_id}/capacity')
+def get_store(store_id: int):
+    for store in stores_data:
+        if store.id == store_id:
+            break
+    else:
+        return JSONResponse({'msg': 'Store not found'}, status_code=404)
+    
+    used_space = 0
+    for product_id, count in store.products.items():
+        product = get_product(product_id)
+        used_space += product.size * count
+    return JSONResponse({
+            "id": store.id,
+            "free_space": store.capacity - used_space,
+            "used_space": used_space,
+            "total": store.capacity
+        })
+    
+    
 
 @app.get('/save')
 def save():
