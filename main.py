@@ -18,6 +18,8 @@ def home():
 def special_page(page: SpecialPage):
     return {"page": page}
 
+# ---------------------------- Users --------------------
+
 @app.get('/users')
 def users(offset: int = 0, limit: int = 2):
     return users_data[offset:offset + limit]
@@ -36,7 +38,7 @@ def user():
     return users_data[5]
 
 @app.get('/users/{user_id}')
-def user(user_id: int, field: str | None = None):
+def get_user(user_id: int, field: str | None = None):
     
     for curr_user in users_data:
         if curr_user.id == user_id:
@@ -48,12 +50,29 @@ def user(user_id: int, field: str | None = None):
         return {field: getattr(user, field)}
     return user
 
+@app.put('/users/{user_id}')
+def user_put(user_id: int, new_user: User):
+
+    for curr_user in users_data:
+        if curr_user.id == user_id:
+            user = curr_user
+            break
+    else:
+        return JSONResponse({'msg': 'User not found'}, 404)
+
+    for field, value in new_user:
+        setattr(user, field, value)
+    user.id = user_id    
+    return user
+
+# -------------------- Products -------------------------
+
 @app.get('/products')
 def products():
     return products_data
 
 @app.post('/products')
-def create_product(new_product: Product, data: str):
+def create_product(new_product: Product):
     if products_data:
         new_product.id = products_data[-1].id + 1
     else:
@@ -62,11 +81,24 @@ def create_product(new_product: Product, data: str):
     return new_product
 
 @app.get('/products/{product_id}')
-def products(product_id: int):
+def get_product(product_id: int):
     for product in products_data:
         if product.id == product_id:
             return product
     return JSONResponse({'msg': 'Product not found'}, status_code=404)
+
+@app.put('/products/{product_id}')
+def product_put(product_id: int, new_product: Product):
+    for product in products_data:
+        if product.id == product_id:
+            break
+    else:
+        return JSONResponse({'msg': 'Product not found'}, status_code=404)
+
+    for field, value in new_product:
+        setattr(product, field, value)
+    product.id = product_id
+    return product
 
 @app.get('/save')
 def save():
