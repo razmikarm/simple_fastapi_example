@@ -1,30 +1,61 @@
-from enum import Enum
 from pydantic import BaseModel
 
 
-class SpecialPage(str, Enum):
-    about = "about"
-    contact = "contact"
-    career = "career"
+# ---------- User
 
-
-class User(BaseModel):
-    id: int = None
-    name: str 
+class UserBase(BaseModel):
+    name: str
     email: str
 
 
-class Product(BaseModel):
-    
-    id: int = None
+class UserCreate(UserBase):
+    password: str
+
+
+class User(UserBase):
+    id: int
+
+# ---------- Product
+
+class ProductBase(BaseModel):
     name: str
     size: int
-    price: float
+    price: int
 
 
-class Store(BaseModel):
-    
-    id: int = None
+class ProductCreate(ProductBase):
+    pass
+
+
+class Product(ProductBase):
+    id: int
+
+# ---------- Store
+
+class StoreBase(BaseModel):
     address: str
-    capacity: int = 200
-    products: dict[int, int] = {}
+    capacity: int
+
+
+class StoreCreate(StoreBase):
+    pass
+
+
+class Store(StoreBase):
+    id: int
+    products: list[Product]
+
+# ---------- Store
+
+class ProductStoreBase(BaseModel):
+    store: Store
+    product: Product
+    count: int
+
+
+class ProductStoreCreate(ProductStoreBase):
+    pass
+
+
+class ProductStore(ProductStoreBase):
+    pass

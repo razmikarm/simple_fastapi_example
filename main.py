@@ -1,5 +1,5 @@
+from utils import *
 from test_data import *
-from utils import is_valid_product_id
 
 from schemas import *
 from fastapi import FastAPI, Request
@@ -73,7 +73,7 @@ def products():
     return products_data
 
 @app.post('/products')
-def create_product(new_product: Product):
+def create_product(new_product: ProductCreate):
     if products_data:
         new_product.id = products_data[-1].id + 1
     else:
